@@ -83,13 +83,23 @@ def auth_view(request):
 @csrf_exempt
 def signup(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
-        username = data.get('username')
-        email = data.get('email')
-        password = data.get('password')
+        try:
+            data = json.loads(request.body)
+        except:
+            return JsonResponse({'error': 'Invalid request data'}, status=400)
+        
+        username = data.get('username', '').strip()
+        email = data.get('email', '').strip()
+        password = data.get('password', '')
         
         if not username or not email or not password:
             return JsonResponse({'error': 'All fields are required'}, status=400)
+        
+        if len(username) < 3:
+            return JsonResponse({'error': 'Username must be at least 3 characters'}, status=400)
+        
+        if len(password) < 6:
+            return JsonResponse({'error': 'Password must be at least 6 characters'}, status=400)
         
         if User.objects.filter(username=username).exists():
             return JsonResponse({'error': 'Username already exists'}, status=400)
@@ -102,16 +112,24 @@ def signup(request):
             login(request, user)
             return JsonResponse({'status': 'ok', 'redirect': '/'})
         except Exception as e:
-            return JsonResponse({'error': f'Server error: {str(e)}'}, status=500)
+            import traceback
+            return JsonResponse({'error': f'Error: {str(e)}'}, status=500)
     return JsonResponse({'error': 'Invalid method'}, status=400)
 
 
 @csrf_exempt
 def signin(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
-        username = data.get('username')
-        password = data.get('password')
+        try:
+            data = json.loads(request.body)
+        except:
+            return JsonResponse({'error': 'Invalid request data'}, status=400)
+        
+        username = data.get('username', '').strip()
+        password = data.get('password', '')
+        
+        if not username or not password:
+            return JsonResponse({'error': 'Username and password required'}, status=400)
         
         user = authenticate(request, username=username, password=password)
         if user:
