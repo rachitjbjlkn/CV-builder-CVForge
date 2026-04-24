@@ -356,8 +356,10 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 
 @media (max-width: 768px) {
   .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
-  .navbar { padding: 0 16px; }
+  .navbar { padding: 0 16px; flex-wrap: wrap; gap: 8px; }
   .nav-links { display: none; }
+  .navbar > div { display: flex; gap: 8px; flex-wrap: wrap; }
+  .nav-cta, .nav-link { padding: 8px 12px; font-size: 13px; }
 }
 
 /* ─── SCROLLBAR ─────────────────────────────────────────── */
