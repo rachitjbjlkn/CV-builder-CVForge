@@ -356,10 +356,10 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 
 @media (max-width: 768px) {
   .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
-  .navbar { padding: 0 16px; flex-wrap: wrap; gap: 8px; }
+  .navbar { padding: 12px 16px; flex-wrap: wrap; gap: 12px; justify-content: space-between; }
   .nav-links { display: none; }
-  .navbar > div { display: flex; gap: 8px; flex-wrap: wrap; }
-  .nav-cta, .nav-link { padding: 8px 12px; font-size: 13px; }
+  .nav-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+  .nav-cta, .nav-link { padding: 8px 12px; font-size: 13px; white-space: nowrap; }
 }
 
 /* ─── SCROLLBAR ─────────────────────────────────────────── */
@@ -499,7 +499,7 @@ textarea.form-control { resize: vertical; min-height: 100px; }
     <a href="/ats/" class="nav-link {% block nav_ats %}{% endblock %}">ATS Checker</a>
   </div>
   
-  <div>
+  <div class="nav-actions">
     {% if user.is_authenticated %}
       <a href="/builder/" class="nav-cta">+ New CV</a>
       <a href="/signout/" class="nav-link">Sign Out</a>
