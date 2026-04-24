@@ -9,8 +9,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Generate a new secret key for production
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-rachit-cvbuilder-secret-key-change-in-production')
 
-# Set DEBUG to False in production
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+# Enable debug if DEBUG env is set
+DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 'yes')
 
 # ALLOWED_HOSTS should be your Render domain
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
