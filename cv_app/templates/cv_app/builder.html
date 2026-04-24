@@ -413,6 +413,26 @@
         .templates-grid {
             grid-template-columns: repeat(2, 1fr);
         }
+
+        .step-nav {
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .step-nav button {
+            flex: 1 1 calc(50% - 4px);
+            min-width: 100px;
+            padding: 12px 8px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 480px) {
+            .step-nav button {
+                flex: 1 1 100%;
+                font-size: 13px;
+                padding: 10px 6px;
+            }
+        }
     }
 </style>
 {% endblock %}
