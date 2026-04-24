@@ -82,19 +82,25 @@ def auth_view(request):
 
 def signup(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
-        username = data.get('username')
-        email = data.get('email')
-        password = data.get('password')
-        
-        if User.objects.filter(username=username).exists():
-            return JsonResponse({'error': 'Username already exists'}, status=400)
-        if User.objects.filter(email=email).exists():
-            return JsonResponse({'error': 'Email already exists'}, status=400)
-        
-        user = User.objects.create_user(username=username, email=email, password=password)
-        login(request, user)
-        return JsonResponse({'status': 'ok', 'redirect': '/'})
+        try:
+            data = json.loads(request.body)
+            username = data.get('username')
+            email = data.get('email')
+            password = data.get('password')
+            
+            if not username or not email or not password:
+                return JsonResponse({'error': 'All fields are required'}, status=400)
+            
+            if User.objects.filter(username=username).exists():
+                return JsonResponse({'error': 'Username already exists'}, status=400)
+            if User.objects.filter(email=email).exists():
+                return JsonResponse({'error': 'Email already exists'}, status=400)
+            
+            user = User.objects.create_user(username=username, email=email, password=password)
+            login(request, user)
+            return JsonResponse({'status': 'ok', 'redirect': '/'})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
     return JsonResponse({'error': 'Invalid method'}, status=400)
 
 
