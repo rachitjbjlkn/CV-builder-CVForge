@@ -146,8 +146,10 @@
   box-shadow: 0 8px 40px rgba(0,0,0,0.3);
   font-family: 'Space Grotesk', sans-serif;
   width: 100%;
-  max-width: 100%;
+  min-height: 100vh;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .tpl-modern .cv-header {
@@ -176,6 +178,10 @@
   font-family: 'Georgia', serif;
   border-radius: 12px; overflow: hidden;
   box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .tpl-executive .cv-header { padding: 40px; border-bottom: 3px double #7c3aed; }
@@ -202,6 +208,10 @@
   font-family: 'Space Grotesk', sans-serif;
   border-radius: 12px; overflow: hidden;
   box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .tpl-creative .cv-header {
@@ -241,6 +251,10 @@
   font-family: 'JetBrains Mono', monospace;
   border-radius: 12px; overflow: hidden;
   box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .tpl-tech .cv-header { background: #161b22; padding: 32px; border-bottom: 1px solid #30363d; }
@@ -266,6 +280,10 @@
   font-family: 'Georgia', serif;
   border-radius: 12px; overflow: hidden;
   box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .tpl-elegant .cv-header { padding: 50px 50px 30px; text-align: center; border-bottom: 1px solid #e5e7eb; }
@@ -288,6 +306,10 @@
   font-family: 'Syne', sans-serif;
   border-radius: 12px; overflow: hidden;
   box-shadow: 0 20px 60px rgba(124,58,237,0.3);
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .tpl-bold .cv-header { background: linear-gradient(135deg, #7c3aed, #00d084); padding: 40px; }
@@ -302,6 +324,17 @@
 .tpl-bold .exp-desc { font-size: 0.875rem; color: #94a3b8; line-height: 1.6; margin-top: 6px; font-family: 'Space Grotesk', sans-serif; }
 .tpl-bold .skill-pill { display: inline-block; background: rgba(124,58,237,0.2); border: 1px solid rgba(124,58,237,0.4); color: #a78bfa; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; margin: 3px; font-family: 'Space Grotesk', sans-serif; }
 .tpl-bold .summary { font-size: 0.9rem; color: #94a3b8; line-height: 1.7; font-family: 'Space Grotesk', sans-serif; border-left: 3px solid #7c3aed; padding-left: 14px; }
+
+/* Empty state padding to cover full page */
+.cv-body-empty {
+  padding: 32px;
+  min-height: 300px;
+}
+
+.empty-msg {
+  color: #666;
+  font-style: italic;
+}
 </style>
 {% endblock %}
 
