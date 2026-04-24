@@ -95,9 +95,13 @@ def signup(request):
         if User.objects.filter(email=email).exists():
             return JsonResponse({'error': 'Email already exists'}, status=400)
         
-        user = User.objects.create_user(username=username, email=email, password=password)
-        login(request, user)
-        return JsonResponse({'status': 'ok', 'redirect': '/'})
+        try:
+            user = User.objects.create_user(username=username, email=email, password=password)
+            UserProfile.objects.get_or_create(user=user)
+            login(request, user)
+            return JsonResponse({'status': 'ok', 'redirect': '/'})
+        except Exception as e:
+            return JsonResponse({'error': f'Server error: {str(e)}'}, status=500)
     return JsonResponse({'error': 'Invalid method'}, status=400)
 
 
