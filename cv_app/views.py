@@ -93,7 +93,6 @@ def signup(request):
             return JsonResponse({'error': 'Email already exists'}, status=400)
         
         user = User.objects.create_user(username=username, email=email, password=password)
-        profile = UserProfile.objects.create(user=user, plan='free')
         login(request, user)
         return JsonResponse({'status': 'ok', 'redirect': '/'})
     return JsonResponse({'error': 'Invalid method'}, status=400)
