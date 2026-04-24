@@ -1,0 +1,821 @@
+{% extends 'cv_app/base.html' %}
+{% block title %}ATS Checker – CVForge{% endblock %}
+{% block nav_ats %}active{% endblock %}
+
+{% block extra_head %}
+<style>
+.ats-layout {
+  max-width: 1100px; margin: 0 auto;
+  padding: 40px 32px 80px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+.ats-hero {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding-bottom: 12px;
+}
+
+.ats-title {
+  font-family: var(--font-display);
+  font-size: 2.4rem; font-weight: 800;
+  letter-spacing: -1px; color: var(--white);
+  margin-bottom: 8px;
+}
+
+.ats-title span {
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.ats-sub { color: var(--muted); font-size: 0.95rem; }
+
+.tab-nav {
+  display: flex;
+  gap: 4px;
+  background: rgba(255,255,255,0.04);
+  padding: 4px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 12px 20px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tab-btn:hover { color: var(--text); }
+
+.tab-btn.active {
+  background: var(--green);
+  color: var(--bg);
+}
+
+.input-panel { display: flex; flex-direction: column; gap: 20px; }
+
+.drop-zone {
+  border: 2px dashed rgba(255,255,255,0.15);
+  border-radius: 12px;
+  padding: 40px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: rgba(255,255,255,0.02);
+}
+
+.drop-zone:hover, .drop-zone.dragover {
+  border-color: var(--green);
+  background: rgba(0,208,132,0.05);
+}
+
+.drop-zone-icon {
+  font-size: 2.5rem;
+  margin-bottom: 12px;
+}
+
+.drop-zone-text {
+  font-size: 0.95rem;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.drop-zone-hint {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.file-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(0,208,132,0.08);
+  border: 1px solid rgba(0,208,132,0.2);
+  border-radius: 10px;
+  margin-top: 12px;
+}
+
+.file-icon { font-size: 1.5rem; }
+
+.file-name { flex: 1; font-weight: 600; }
+
+.file-remove {
+  background: none;
+  border: none;
+  color: #ef4444;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.cv-select-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.cv-select-card {
+  border: 2px solid rgba(255,255,255,0.08);
+  border-radius: 10px; padding: 12px;
+  cursor: pointer; transition: all 0.2s;
+  background: rgba(255,255,255,0.02);
+}
+
+.cv-select-card:hover { border-color: rgba(0,208,132,0.3); background: rgba(0,208,132,0.04); }
+.cv-select-card.selected { border-color: var(--green); background: rgba(0,208,132,0.08); }
+
+.cv-select-name { font-weight: 700; font-size: 0.875rem; color: var(--white); }
+.cv-select-tpl  { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+/* Results */
+.results-panel { display: flex; flex-direction: column; gap: 20px; }
+
+.score-overview {
+  display: flex; align-items: center;
+  gap: 28px; flex-wrap: wrap;
+}
+
+.main-score {
+  position: relative; width: 140px; height: 140px;
+  flex-shrink: 0;
+}
+
+.main-score svg { transform: rotate(-90deg); }
+
+.main-score-text {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+
+.main-score-num {
+  font-family: var(--font-display);
+  font-size: 2rem; font-weight: 800;
+  line-height: 1;
+}
+
+.main-score-label {
+  font-size: 0.7rem; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+
+.score-breakdown { flex: 1; min-width: 200px; }
+
+.score-row {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 12px;
+}
+
+.score-row-label { font-size: 0.8rem; color: var(--muted); width: 120px; flex-shrink: 0; }
+.score-row-bar   { flex: 1; }
+.score-row-val   { font-size: 0.8rem; font-weight: 700; width: 36px; text-align: right; }
+
+/* Keywords */
+.kw-section { display: flex; flex-direction: column; gap: 12px; }
+
+.kw-group-title {
+  font-size: 0.75rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: 8px;
+}
+
+.kw-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.kw-tag {
+  padding: 4px 12px; border-radius: 20px;
+  font-size: 0.78rem; font-weight: 500;
+}
+
+.kw-matched { background: rgba(0,208,132,0.12); color: var(--green); border: 1px solid rgba(0,208,132,0.25); }
+.kw-missing { background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2); }
+
+/* Suggestions */
+.suggestion-item {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 12px; border-radius: 10px;
+  background: rgba(124,58,237,0.06);
+  border: 1px solid rgba(124,58,237,0.15);
+  margin-bottom: 8px;
+  font-size: 0.875rem; line-height: 1.5;
+}
+
+.suggestion-icon {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: rgba(124,58,237,0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem; flex-shrink: 0;
+}
+
+/* Gauge animation */
+@keyframes dash-anim {
+  from { stroke-dashoffset: 440; }
+}
+
+.gauge-circle { animation: dash-anim 1.5s cubic-bezier(0.4,0,0.2,1) both; }
+
+.analyze-btn { width: 100%; padding: 16px; font-size: 1rem; }
+
+.hidden { display: none; }
+
+.template-preview-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  align-items: center;
+  justify-content: center;
+}
+
+.template-preview-modal.show { display: flex; animation: fadeIn 0.3s ease; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.preview-content {
+  width: 90%;
+  max-width: 900px;
+  max-height: 90vh;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.preview-header {
+  background: #070b14;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.preview-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: white;
+}
+
+.preview-close { background: none; border: none; color: var(--muted); font-size: 1.5rem; cursor: pointer; }
+
+.preview-body { flex: 1; overflow: auto; padding: 20px; }
+
+.preview-iframe { width: 100%; height: 500px; border: none; background: white; }
+
+@media (max-width: 900px) {
+  .ats-layout { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ats-layout">
+
+  <!-- Hero -->
+  <div class="ats-hero">
+    <div class="ats-title">🎯 <span>ATS Score</span> Checker</div>
+    <div class="ats-sub">Analyze your CV against any job description · Get instant keyword & compatibility scores</div>
+  </div>
+
+  <!-- Left: Input -->
+  <div class="input-panel">
+
+    <!-- Tab Navigation -->
+    <div class="tab-nav">
+      <button class="tab-btn active" id="tabSaved" onclick="switchTab('saved')">💾 My CVs</button>
+      <button class="tab-btn" id="tabExternal" onclick="switchTab('external')">📁 External File</button>
+    </div>
+
+    <!-- Saved CV Tab -->
+    <div id="panelSaved">
+      <div class="card card-glow">
+        <div class="section-title"><div class="dot"></div>Select Your CV</div>
+        {% if all_cvs %}
+        <div class="cv-select-grid">
+          {% for c in all_cvs %}
+          <div class="cv-select-card {% if cv and cv.pk == c.pk %}selected{% endif %}"
+               data-id="{{ c.pk }}" onclick="selectCV({{ c.pk }}, this)">
+            <div class="cv-select-name">{{ c.full_name }}</div>
+            <div class="cv-select-tpl">{{ c.get_template_display }}</div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align:center;padding:20px;color:var(--muted)">
+          No CVs yet. <a href="/builder/" style="color:var(--green)">Create one first →</a>
+        </div>
+        {% endif %}
+        <input type="hidden" id="selectedCvId" value="{{ cv.pk|default:'' }}">
+      </div>
+    </div>
+
+    <!-- External File Tab -->
+    <div id="panelExternal" class="hidden">
+      <div class="card card-glow">
+        <div class="section-title"><div class="dot"></div>Upload CV File</div>
+        
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('cvFileInput').click()">
+          <div class="drop-zone-icon">📄</div>
+          <div class="drop-zone-text">Drop your CV here or click to browse</div>
+          <div class="drop-zone-hint">Supports PDF, DOCX, TXT (max 10MB)</div>
+        </div>
+        <input type="file" id="cvFileInput" accept=".pdf,.docx,.txt" style="display:none" onchange="handleFileSelect(event)">
+        
+        <div id="filePreview" class="hidden">
+          <div class="file-preview">
+            <span class="file-icon">📄</span>
+            <span class="file-name" id="fileName"></span>
+            <button class="file-remove" onclick="removeFile()">✕</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Job Description (shared) -->
+    <div class="card card-glow">
+      <div class="section-title"><div class="dot"></div>Job Description</div>
+      <div class="form-group">
+        <label class="form-label">Paste the full job description</label>
+        <textarea class="form-control" id="jobDescription" rows="12"
+          placeholder="Paste the complete job description here...&#10;&#10;We're looking for a Software Engineer with experience in Python, Django, React...&#10;&#10;Requirements:&#10;- 3+ years of experience&#10;- Strong knowledge of REST APIs&#10;- Experience with cloud platforms (AWS/GCP)..."></textarea>
+      </div>
+
+      <!-- Sample JDs -->
+      <div style="margin-bottom:16px">
+        <div class="form-label" style="margin-bottom:8px">Quick Sample JDs</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          <button class="btn btn-ghost btn-sm" onclick="loadSample('fullstack')">Full Stack Dev</button>
+          <button class="btn btn-ghost btn-sm" onclick="loadSample('data')">Data Scientist</button>
+          <button class="btn btn-ghost btn-sm" onclick="loadSample('pm')">Product Manager</button>
+          <button class="btn btn-ghost btn-sm" onclick="loadSample('devops')">DevOps Engineer</button>
+        </div>
+      </div>
+
+      <button class="btn btn-primary analyze-btn" id="analyzeBtn" onclick="analyzeATS()">
+        <span id="analyzeBtnText">🔍 Analyze ATS Score</span>
+        <span id="analyzeSpinner" style="display:none" class="spinner"></span>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Right: Results -->
+  <div class="results-panel" id="resultsPanel" style="display:none">
+
+    <!-- Score Overview -->
+    <div class="card card-glow" id="scoreCard">
+      <div class="section-title"><div class="dot"></div>ATS Score Results</div>
+      <div class="score-overview">
+        <div class="main-score">
+          <svg width="140" height="140" viewBox="0 0 140 140">
+            <circle cx="70" cy="70" r="60" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="12"/>
+            <circle id="gaugeCircle" cx="70" cy="70" r="60" fill="none"
+              stroke="url(#scoreGrad)" stroke-width="12"
+              stroke-linecap="round"
+              stroke-dasharray="377"
+              stroke-dashoffset="377"
+              class="gauge-circle"/>
+            <defs>
+              <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#00d084"/>
+                <stop offset="100%" stop-color="#7c3aed"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="main-score-text">
+            <div class="main-score-num" id="mainScoreNum">0%</div>
+            <div class="main-score-label">ATS Score</div>
+          </div>
+        </div>
+
+        <div class="score-breakdown">
+          <div class="score-row">
+            <div class="score-row-label">🔑 Keywords</div>
+            <div class="score-row-bar"><div class="progress"><div class="progress-bar" id="bar-kw" style="width:0%"></div></div></div>
+            <div class="score-row-val" id="val-kw">0%</div>
+          </div>
+          <div class="score-row">
+            <div class="score-row-label">📋 Format</div>
+            <div class="score-row-bar"><div class="progress"><div class="progress-bar" id="bar-fmt" style="width:0%"></div></div></div>
+            <div class="score-row-val" id="val-fmt">0%</div>
+          </div>
+          <div class="score-row">
+            <div class="score-row-label">📝 Content</div>
+            <div class="score-row-bar"><div class="progress"><div class="progress-bar" id="bar-cnt" style="width:0%"></div></div></div>
+            <div class="score-row-val" id="val-cnt">0%</div>
+          </div>
+          <div class="score-row">
+            <div class="score-row-label">⚡ Skills Match</div>
+            <div class="score-row-bar"><div class="progress"><div class="progress-bar" id="bar-sk" style="width:0%"></div></div></div>
+            <div class="score-row-val" id="val-sk">0%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grade -->
+      <div id="gradeBox" style="margin-top:20px;padding:14px;border-radius:10px;text-align:center;font-family:var(--font-display)"></div>
+
+      <!-- Analysis -->
+      <div id="analysisBox" style="margin-top:16px;padding:14px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);font-size:0.875rem;color:var(--muted);line-height:1.6;display:none"></div>
+    </div>
+
+    <!-- Keywords -->
+    <div class="card card-glow">
+      <div class="section-title"><div class="dot"></div>Keyword Analysis</div>
+      <div class="kw-section">
+        <div>
+          <div class="kw-group-title" style="color:var(--green)">✅ Matched Keywords</div>
+          <div class="kw-tags" id="matchedKws"></div>
+        </div>
+        <div>
+          <div class="kw-group-title" style="color:#ef4444">❌ Missing Keywords</div>
+          <div class="kw-tags" id="missingKws"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Suggestions -->
+    <div class="card card-glow">
+      <div class="section-title"><div class="dot"></div>💡 Improvement Suggestions</div>
+      <div id="suggestionsList"></div>
+    </div>
+
+    <!-- Actions -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <a href="#" id="editCvLink" class="btn btn-primary">✏️ Edit CV to Improve</a>
+      <button class="btn btn-outline" onclick="analyzeATS()">🔄 Re-analyze</button>
+      <a href="#" id="printCvLink" class="btn btn-ghost" target="_blank">🖨 Print CV</a>
+      <button class="btn btn-purple" id="previewBestBtn" onclick="showBestTemplatePreview()">👁 Preview Best Template</button>
+    </div>
+
+  </div>
+
+  <!-- Empty state when no results yet -->
+  <div class="results-panel" id="emptyResults">
+    <div class="card" style="text-align:center;padding:60px 32px;color:var(--muted)">
+      <div style="font-size:4rem;margin-bottom:16px;opacity:0.4">🎯</div>
+      <div style="font-size:1.1rem;color:var(--text);margin-bottom:8px">Ready to Analyze</div>
+      <div style="font-size:0.875rem">Select your CV, paste a job description,<br>and click Analyze to see your ATS score.</div>
+    </div>
+  </div>
+
+  <!-- Best Template Preview Modal -->
+  <div class="template-preview-modal" id="bestTemplateModal" onclick="closeBestTemplate(event)">
+    <div class="preview-content" onclick="event.stopPropagation()">
+      <div class="preview-header">
+        <div class="preview-title" id="bestTemplateTitle">Best Template</div>
+        <button class="preview-close" onclick="closeBestTemplate()">&times;</button>
+      </div>
+      <div class="preview-body">
+        <iframe class="preview-iframe" id="bestTemplateIframe"></iframe>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let selectedCvId = '{{ cv.pk|default:"" }}';
+let currentTab = 'saved';
+let selectedFile = null;
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById('tabSaved').classList.toggle('active', tab === 'saved');
+  document.getElementById('tabExternal').classList.toggle('active', tab === 'external');
+  document.getElementById('panelSaved').classList.toggle('hidden', tab !== 'saved');
+  document.getElementById('panelExternal').classList.toggle('hidden', tab !== 'external');
+}
+
+function selectCV(id, el) {
+  document.querySelectorAll('.cv-select-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedCvId = id;
+  document.getElementById('selectedCvId').value = id;
+}
+
+// File handling
+const dropZone = document.getElementById('dropZone');
+
+dropZone.addEventListener('dragover', e => {
+  e.preventDefault();
+  dropZone.classList.add('dragover');
+});
+
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  const files = e.dataTransfer.files;
+  if (files.length) handleFile(files[0]);
+});
+
+function handleFileSelect(e) {
+  if (e.target.files.length) handleFile(e.target.files[0]);
+}
+
+function handleFile(file) {
+  const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
+  const ext = file.name.split('.').pop().toLowerCase();
+  
+  if (!validTypes.includes(file.type) && !['pdf','docx','txt'].includes(ext)) {
+    showToast('Please upload PDF, DOCX, or TXT file', 'error');
+    return;
+  }
+  
+  if (file.size > 10 * 1024 * 1024) {
+    showToast('File size must be under 10MB', 'error');
+    return;
+  }
+  
+  selectedFile = file;
+  document.getElementById('fileName').textContent = file.name;
+  document.getElementById('dropZone').classList.add('hidden');
+  document.getElementById('filePreview').classList.remove('hidden');
+  showToast('File loaded: ' + file.name, 'success');
+}
+
+function removeFile() {
+  selectedFile = null;
+  document.getElementById('cvFileInput').value = '';
+  document.getElementById('dropZone').classList.remove('hidden');
+  document.getElementById('filePreview').classList.add('hidden');
+}
+
+const SAMPLES = {
+  fullstack: `We are looking for a Full Stack Software Engineer to join our team.
+
+Requirements:
+- 3+ years of experience in full-stack development
+- Strong proficiency in Python, Django, and REST APIs
+- Experience with React.js or Vue.js
+- Proficiency in SQL databases (PostgreSQL, MySQL)
+- Experience with Docker, Git, and CI/CD pipelines
+- Knowledge of AWS or GCP cloud services
+- Strong understanding of HTML5, CSS3, JavaScript
+- Experience with agile/scrum methodologies
+
+Responsibilities:
+- Design and develop scalable web applications
+- Collaborate with cross-functional teams
+- Write clean, maintainable code with unit tests
+- Participate in code reviews
+- Deploy and maintain applications on cloud infrastructure`,
+
+  data: `Data Scientist – Machine Learning & Analytics
+
+Requirements:
+- 2+ years experience in data science or machine learning
+- Strong Python programming skills (pandas, numpy, scikit-learn)
+- Experience with deep learning frameworks (TensorFlow, PyTorch)
+- Proficiency in SQL and data manipulation
+- Experience with data visualization (Matplotlib, Seaborn, Tableau)
+- Knowledge of statistical modeling and A/B testing
+- Experience with NLP or computer vision is a plus
+- Familiarity with cloud platforms (AWS SageMaker, GCP AI Platform)
+- Strong communication skills to present insights to stakeholders`,
+
+  pm: `Product Manager – B2B SaaS
+
+We are seeking an experienced Product Manager to drive our product roadmap.
+
+Requirements:
+- 3+ years of product management experience
+- Experience with agile development methodologies
+- Strong analytical skills and data-driven decision making
+- Excellent communication and stakeholder management
+- Experience with user research and customer discovery
+- Proficiency with product tools (Jira, Confluence, Figma)
+- Understanding of software development lifecycle
+- MBA or equivalent experience preferred
+
+Responsibilities:
+- Define and prioritize product roadmap
+- Work closely with engineering, design, and business teams
+- Analyze product metrics and drive growth`,
+
+  devops: `DevOps / Cloud Infrastructure Engineer
+
+Requirements:
+- 3+ years of DevOps or SRE experience
+- Strong knowledge of AWS, Azure, or GCP
+- Proficiency with Docker and Kubernetes
+- Experience with CI/CD tools (Jenkins, GitHub Actions, GitLab CI)
+- Infrastructure as Code experience (Terraform, Ansible)
+- Strong Linux/Unix administration skills
+- Experience with monitoring tools (Prometheus, Grafana, ELK stack)
+- Scripting skills in Python, Bash, or Go
+- Experience with security best practices and DevSecOps`
+};
+
+function loadSample(type) {
+  document.getElementById('jobDescription').value = SAMPLES[type];
+  showToast('Sample JD loaded!', 'success');
+}
+
+async function analyzeATS() {
+  const jd = document.getElementById('jobDescription').value.trim();
+  if (!jd) { showToast('Please paste a job description', 'error'); return; }
+  
+  document.getElementById('analyzeBtnText').style.display = 'none';
+  document.getElementById('analyzeSpinner').style.display = 'inline-block';
+  document.getElementById('analyzeBtn').disabled = true;
+  document.getElementById('emptyResults').style.display = 'none';
+  
+  try {
+    let data;
+    
+    if (currentTab === 'external') {
+      if (!selectedFile) {
+        showToast('Please upload a CV file first', 'error');
+        return;
+      }
+      
+      const formData = new FormData();
+      formData.append('cv_file', selectedFile);
+      formData.append('job_description', jd);
+      
+      const res = await fetch('/ats/external/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        body: formData
+      });
+      
+      data = await res.json();
+      if (data.error) { showToast(data.error, 'error'); return; }
+    } else {
+      if (!selectedCvId) {
+        showToast('Please select a CV first', 'error');
+        return;
+      }
+      
+      const res = await fetch('/ats/analyze/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+        body: JSON.stringify({ cv_id: selectedCvId, job_description: jd })
+      });
+      
+      data = await res.json();
+      if (data.error) { showToast(data.error, 'error'); return; }
+    }
+    
+    renderResults(data);
+    
+    if (currentTab === 'external') {
+      showToast('External CV analyzed! 🎯', 'success');
+    } else {
+      showToast('Analysis complete! 🎯', 'success');
+    }
+  } catch(e) {
+    showToast('Analysis failed. Please try again.', 'error');
+  } finally {
+    document.getElementById('analyzeBtnText').style.display = 'inline';
+    document.getElementById('analyzeSpinner').style.display = 'none';
+    document.getElementById('analyzeBtn').disabled = false;
+  }
+}
+
+function renderResults(data) {
+  document.getElementById('resultsPanel').style.display = 'flex';
+
+  // Animate gauge
+  const score = data.overall_score;
+  const circumference = 377;
+  const offset = circumference - (score / 100) * circumference;
+
+  setTimeout(() => {
+    document.getElementById('gaugeCircle').style.transition = 'stroke-dashoffset 1.5s cubic-bezier(0.4,0,0.2,1)';
+    document.getElementById('gaugeCircle').style.strokeDashoffset = offset;
+  }, 100);
+
+  // Animate number
+  let current = 0;
+  const interval = setInterval(() => {
+    current = Math.min(current + 2, score);
+    document.getElementById('mainScoreNum').textContent = current + '%';
+    if (current >= score) clearInterval(interval);
+  }, 20);
+
+  // Bars
+  const bars = [
+    ['kw', data.keyword_score], ['fmt', data.format_score],
+    ['cnt', data.content_score], ['sk', data.skills_match_score]
+  ];
+  bars.forEach(([id, val]) => {
+    setTimeout(() => {
+      document.getElementById(`bar-${id}`).style.width = val + '%';
+      document.getElementById(`val-${id}`).textContent = val + '%';
+    }, 300);
+  });
+
+  // Grade
+  let grade, gradeColor, gradeMsg;
+  if (score >= 85)      { grade='A+'; gradeColor='var(--green)'; gradeMsg='Excellent! Your CV is highly ATS-compatible 🚀'; }
+  else if (score >= 70) { grade='A';  gradeColor='var(--green)'; gradeMsg='Great match! Minor tweaks will make it perfect ✅'; }
+  else if (score >= 55) { grade='B';  gradeColor='#fb923c'; gradeMsg='Good start! Add more keywords to improve your score 📈'; }
+  else if (score >= 40) { grade='C';  gradeColor='#f59e0b'; gradeMsg='Needs improvement. Follow the suggestions below 💡'; }
+  else                  { grade='D';  gradeColor='#ef4444'; gradeMsg='Significant work needed. Tailor your CV to this role ⚠️'; }
+
+  document.getElementById('gradeBox').innerHTML = `
+    <div style="font-size:2.5rem;color:${gradeColor};font-weight:800">Grade: ${grade}</div>
+    <div style="color:var(--muted);font-size:0.875rem;margin-top:4px">${gradeMsg}</div>`;
+
+  // Analysis
+  if (data.detailed_analysis) {
+    const ab = document.getElementById('analysisBox');
+    ab.style.display = 'block';
+    ab.innerHTML = `<strong style="color:var(--text)">📊 Analysis:</strong> ${data.detailed_analysis}`;
+  }
+
+  // Keywords
+  const matchEl = document.getElementById('matchedKws');
+  const missEl  = document.getElementById('missingKws');
+  matchEl.innerHTML = (data.matched_keywords||[]).map(k =>
+    `<span class="kw-tag kw-matched">${k}</span>`).join('') || '<span style="color:var(--muted);font-size:0.82rem">None found</span>';
+  missEl.innerHTML = (data.missing_keywords||[]).map(k =>
+    `<span class="kw-tag kw-missing">${k}</span>`).join('') || '<span style="color:var(--green);font-size:0.82rem">All key terms covered! 🎉</span>';
+
+  // Suggestions
+  const icons = ['💡','🎯','✏️','🔑','📊','⭐','🚀','📝'];
+  document.getElementById('suggestionsList').innerHTML =
+    (data.suggestions||[]).map((s, i) => `
+      <div class="suggestion-item">
+        <div class="suggestion-icon">${icons[i%icons.length]}</div>
+        <div>${s}</div>
+      </div>`).join('');
+
+  // Action links - hide for external files
+  if (currentTab === 'external') {
+    document.getElementById('editCvLink').style.display = 'none';
+    document.getElementById('printCvLink').style.display = 'none';
+    document.getElementById('previewBestBtn').style.display = 'none';
+  } else {
+    document.getElementById('editCvLink').style.display = 'inline-flex';
+    document.getElementById('printCvLink').style.display = 'inline-flex';
+    document.getElementById('previewBestBtn').style.display = 'inline-flex';
+    document.getElementById('editCvLink').href = `/builder/${selectedCvId}/`;
+    document.getElementById('printCvLink').href = `/print/${selectedCvId}/`;
+  }
+
+  // Show best template based on score
+  const bestTemplates = {
+    modern: 'modern',
+    executive: 'executive',
+    creative: 'creative',
+    tech: 'tech',
+    elegant: 'elegant',
+    bold: 'bold'
+  };
+  window.currentBestTemplate = score >= 70 ? 'modern' : score >= 50 ? 'tech' : 'bold';
+  document.getElementById('previewBestBtn').onclick = () => showBestTemplatePreview();
+
+  // Scroll to results
+  document.getElementById('resultsPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function showBestTemplatePreview() {
+  if (!window.currentBestTemplate) window.currentBestTemplate = 'modern';
+  const modal = document.getElementById('bestTemplateModal');
+  const title = document.getElementById('bestTemplateTitle');
+  const iframe = document.getElementById('bestTemplateIframe');
+  
+  const names = { modern: 'Modern Minimal', executive: 'Executive Pro', creative: 'Creative Vivid', tech: 'Tech Developer', elegant: 'Elegant Classic', bold: 'Bold Impact' };
+  title.textContent = names[window.currentBestTemplate] + ' (Recommended)';
+  
+  const cvId = currentTab === 'external' ? '' : selectedCvId;
+  iframe.src = cvId ? `/print/${cvId}/` : `/print/demo/?template=${window.currentBestTemplate}`;
+  
+  modal.classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeBestTemplate(event) {
+  if (event && event.target !== event.currentTarget) return;
+  document.getElementById('bestTemplateModal').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+function getCookie(name) {
+  const v = document.cookie.split(';').find(c => c.trim().startsWith(name+'='));
+  return v ? v.split('=')[1] : '';
+}
+</script>
+{% endblock %}

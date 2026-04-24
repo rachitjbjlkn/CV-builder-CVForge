@@ -1,0 +1,301 @@
+{% extends 'cv_app/base.html' %}
+{% block title %}CVForge – Rachit's CV Builder & ATS Checker{% endblock %}
+{% block nav_home %}active{% endblock %}
+
+{% block extra_head %}
+<style>
+  .hero {
+    text-align: center;
+    padding: 100px 32px 60px;
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    border-radius: 20px;
+    background: rgba(0, 208, 132, 0.1);
+    border: 1px solid rgba(0, 208, 132, 0.25);
+    color: var(--green);
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 28px;
+    animation: fade-up 0.6s ease both;
+  }
+
+  .hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -2px;
+    margin-bottom: 20px;
+    animation: fade-up 0.6s 0.1s ease both;
+  }
+
+  .hero-title span {
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-sub {
+    font-size: 1.15rem;
+    color: var(--muted);
+    max-width: 560px;
+    margin: 0 auto 40px;
+    line-height: 1.7;
+    animation: fade-up 0.6s 0.2s ease both;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    animation: fade-up 0.6s 0.3s ease both;
+  }
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Features */
+  .features {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 32px 60px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+
+  .feature-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    transition: all 0.3s;
+    animation: fade-up 0.5s ease both;
+    cursor: default;
+  }
+
+  .feature-card:hover {
+    border-color: rgba(0, 208, 132, 0.4);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 208, 132, 0.1);
+  }
+
+  .feature-icon {
+    font-size: 2rem;
+    margin-bottom: 16px;
+    display: inline-block;
+    animation: bounce-icon 2s ease-in-out infinite;
+  }
+
+  @keyframes bounce-icon {
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-4px);
+    }
+  }
+
+  .feature-name {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 8px;
+  }
+
+  .feature-desc {
+    font-size: 0.875rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* CVs list */
+  .cvs-section {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 32px 80px;
+  }
+
+  .cvs-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .cvs-title {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--white);
+  }
+
+  .cv-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+
+  .cv-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    transition: all 0.3s;
+    animation: fade-up 0.4s ease both;
+  }
+
+  .cv-card:hover {
+    border-color: rgba(124, 58, 237, 0.4);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(124, 58, 237, 0.1);
+  }
+
+  .cv-name {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 6px;
+  }
+
+  .cv-meta {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .cv-meta span {
+    margin-right: 12px;
+  }
+
+  .cv-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+
+  .empty-icon {
+    font-size: 4rem;
+    margin-bottom: 16px;
+    opacity: 0.5;
+  }
+
+  .empty-text {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+
+  .empty-sub {
+    font-size: 0.875rem;
+    margin-bottom: 24px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-badge">
+    <span>🚀</span> Hi {{ user_name|default:user.username }}! Your AI-Powered Career Suite
+  </div>
+  <h1 class="hero-title">
+    Build <span>Winning CVs</span><br>Beat Every ATS
+  </h1>
+  <p class="hero-sub">
+    Create stunning, ATS-optimized CVs with 8 professional templates.
+    Analyze your CV against any job description with AI-powered scoring.
+  </p>
+  <div class="hero-actions">
+    <a href="/builder/" class="btn btn-primary btn-lg">✏️ Build My CV</a>
+    <a href="/ats/" class="btn btn-purple btn-lg">🎯 Check ATS Score</a>
+  </div>
+</div>
+
+<!-- Features -->
+<div class="features">
+  {% for feat in features %}
+  <div class="feature-card" style="animation-delay: {{ forloop.counter0 }}00ms">
+    <div class="feature-icon">{{ feat.icon }}</div>
+    <div class="feature-name">{{ feat.name }}</div>
+    <div class="feature-desc">{{ feat.desc }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Saved CVs -->
+<div class="cvs-section">
+  <div class="cvs-header">
+    <div class="cvs-title">📁 Your CVs</div>
+    <a href="/builder/" class="btn btn-primary">+ New CV</a>
+  </div>
+
+  {% if cvs %}
+  <div class="cv-grid">
+    {% for cv in cvs %}
+    <div class="cv-card" style="animation-delay: {{ forloop.counter0 }}00ms">
+      <div class="cv-name">{{ cv.full_name }}</div>
+      <div class="cv-meta">
+        <span>📧 {{ cv.email|default:"No email" }}</span>
+        <span>🎨 {{ cv.get_template_display }}</span>
+      </div>
+      <div class="cv-meta">
+        <span>🕐 {{ cv.updated_at|date:"M d, Y" }}</span>
+        {% with score=cv.ats_scores.first %}
+        {% if score %}
+        <span
+          class="badge {% if score.overall_score >= 70 %}badge-green{% elif score.overall_score >= 50 %}badge-orange{% else %}badge-red{% endif %}">
+          ATS: {{ score.overall_score }}%
+        </span>
+        {% endif %}
+        {% endwith %}
+      </div>
+      <div class="cv-actions">
+        <a href="/preview/{{ cv.pk }}/" class="btn btn-outline btn-sm">👁 View</a>
+        <a href="/builder/{{ cv.pk }}/" class="btn btn-ghost btn-sm">✏️ Edit</a>
+        <a href="/ats/{{ cv.pk }}/" class="btn btn-purple btn-sm">🎯 ATS</a>
+        <a href="/print/{{ cv.pk }}/" class="btn btn-ghost btn-sm">🖨 Print</a>
+        <a href="/delete/{{ cv.pk }}/" class="btn btn-danger btn-sm" onclick="return confirm('Delete this CV?')">🗑</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state card">
+    <div class="empty-icon">📄</div>
+    <div class="empty-text">No CVs yet, Rachit!</div>
+    <div class="empty-sub">Create your first professional CV in minutes</div>
+    <a href="/builder/" class="btn btn-primary">✏️ Create My First CV</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

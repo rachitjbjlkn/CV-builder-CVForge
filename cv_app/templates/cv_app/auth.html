@@ -1,0 +1,283 @@
+{% extends 'cv_app/base.html' %}
+{% block title %}Sign In – CVForge{% endblock %}
+
+{% block extra_head %}
+<style>
+.auth-page {
+  min-height: calc(100vh - 64px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.auth-container {
+  width: 100%;
+  max-width: 420px;
+  animation: slideUp 0.5s ease;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.auth-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 40px;
+  backdrop-filter: blur(12px);
+}
+
+.auth-logo {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.auth-logo .brand {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 800;
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.auth-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 28px;
+  background: rgba(255,255,255,0.04);
+  padding: 4px;
+  border-radius: 10px;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.auth-tab.active {
+  background: var(--green);
+  color: var(--bg);
+}
+
+.auth-form { display: none; }
+.auth-form.active { display: block; animation: fadeIn 0.3s ease; }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.form-group { margin-bottom: 20px; }
+
+.form-control {
+  width: 100%;
+  padding: 14px 16px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: var(--font-main);
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px var(--green-glow);
+}
+
+.auth-btn {
+  width: 100%;
+  padding: 14px;
+  font-size: 1rem;
+  margin-top: 8px;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 24px 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.divider::before, .divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255,255,255,0.1);
+}
+
+.social-auth {
+  display: flex;
+  gap: 12px;
+}
+
+.social-btn {
+  flex: 1;
+  padding: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.social-btn:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.2);
+}
+
+.plan-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #1a1a2e;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 20px;
+  margin-top: 16px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div class="brand">⚡ CVForge</div>
+        <p style="color:var(--muted);font-size:0.9rem">Build ATS-proof resumes in seconds</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchAuth('signin')">Sign In</button>
+        <button class="auth-tab" onclick="switchAuth('signup')">Sign Up</button>
+      </div>
+
+      <!-- Sign In Form -->
+      <form class="auth-form active" id="signinForm" onsubmit="handleSignin(event)">
+        <div class="form-group">
+          <input type="text" class="form-control" name="username" placeholder="Username" required>
+        </div>
+        <div class="form-group">
+          <input type="password" class="form-control" name="password" placeholder="Password" required>
+        </div>
+        <button type="submit" class="btn btn-primary auth-btn">Sign In</button>
+      </form>
+
+      <!-- Sign Up Form -->
+      <form class="auth-form" id="signupForm" onsubmit="handleSignup(event)">
+        <div class="form-group">
+          <input type="text" class="form-control" name="username" placeholder="Username" required>
+        </div>
+        <div class="form-group">
+          <input type="email" class="form-control" name="email" placeholder="Email" required>
+        </div>
+        <div class="form-group">
+          <input type="password" class="form-control" name="password" placeholder="Password" required>
+        </div>
+        <button type="submit" class="btn btn-primary auth-btn">Create Account</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let authMode = 'signin';
+
+function switchAuth(mode) {
+  authMode = mode;
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+  
+  if (mode === 'signin') {
+    document.querySelector('.auth-tab:first-child').classList.add('active');
+    document.getElementById('signinForm').classList.add('active');
+  } else {
+    document.querySelector('.auth-tab:last-child').classList.add('active');
+    document.getElementById('signupForm').classList.add('active');
+  }
+}
+
+async function handleSignup(e) {
+  e.preventDefault();
+  const form = e.target;
+  const data = {
+    username: form.username.value,
+    email: form.email.value,
+    password: form.password.value
+  };
+  
+  try {
+    const res = await fetch('/signup/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+      body: JSON.stringify(data)
+    });
+    const d = await res.json();
+    
+    if (d.error) {
+      showToast(d.error, 'error');
+    } else {
+      showToast('Account created!', 'success');
+      setTimeout(() => window.location.href = d.redirect, 500);
+    }
+  } catch(err) {
+    showToast('Error creating account', 'error');
+  }
+}
+
+async function handleSignin(e) {
+  e.preventDefault();
+  const form = e.target;
+  const data = {
+    username: form.username.value,
+    password: form.password.value
+  };
+  
+  try {
+    const res = await fetch('/signin/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+      body: JSON.stringify(data)
+    });
+    const d = await res.json();
+    
+    if (d.error) {
+      showToast(d.error, 'error');
+    } else {
+      showToast('Welcome back!', 'success');
+      setTimeout(() => window.location.href = d.redirect, 500);
+    }
+  } catch(err) {
+    showToast('Error signing in', 'error');
+  }
+}
+
+function getCookie(name) {
+  const v = document.cookie.split(';').find(c => c.trim().startsWith(name + '='));
+  return v ? v.split('=')[1] : '';
+}
+</script>
+{% endblock %}

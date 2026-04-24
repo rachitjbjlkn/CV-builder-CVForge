@@ -1,0 +1,1173 @@
+{% extends 'cv_app/base.html' %}
+{% block title %}CV Builder – CVForge{% endblock %}
+{% block nav_builder %}active{% endblock %}
+
+{% block extra_head %}
+<style>
+    .builder-layout {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        min-height: calc(100vh - 64px);
+    }
+
+    /* Dropdown select fixes for dark theme */
+    select.form-control, .form-control select,
+    select, select option {
+        background-color: #0a0f18 !important;
+        color: #e4e8f0 !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+    }
+
+    select option {
+        padding: 10px !important;
+    }
+
+    /* Sidebar */
+    .builder-sidebar {
+        background: rgba(7, 11, 20, 0.95);
+        border-right: 1px solid var(--border);
+        padding: 24px 0;
+        position: sticky;
+        top: 64px;
+        height: calc(100vh - 64px);
+        overflow-y: auto;
+    }
+
+    .sidebar-title {
+        font-family: var(--font-display);
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        padding: 0 20px 12px;
+    }
+
+    .sidebar-step {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 20px;
+        cursor: pointer;
+        border-left: 3px solid transparent;
+        transition: all 0.2s;
+        font-size: 0.875rem;
+        color: var(--muted);
+    }
+
+    .sidebar-step:hover {
+        background: rgba(0, 208, 132, 0.05);
+        color: var(--text);
+    }
+
+    .sidebar-step.active {
+        border-left-color: var(--green);
+        background: rgba(0, 208, 132, 0.08);
+        color: var(--green);
+    }
+
+    .sidebar-step.done {
+        color: var(--green);
+    }
+
+    .step-num {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 700;
+        flex-shrink: 0;
+        transition: all 0.2s;
+    }
+
+    .sidebar-step.active .step-num {
+        background: var(--green);
+        border-color: var(--green);
+        color: var(--bg);
+    }
+
+    .sidebar-step.done .step-num {
+        background: rgba(0, 208, 132, 0.2);
+        border-color: rgba(0, 208, 132, 0.4);
+    }
+
+    .sidebar-progress {
+        padding: 20px;
+        border-top: 1px solid var(--border);
+        margin-top: 12px;
+    }
+
+    .progress-label {
+        font-size: 0.75rem;
+        color: var(--muted);
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    /* Main area */
+    .builder-main {
+        padding: 32px;
+        max-width: 820px;
+    }
+
+    /* Step panels */
+    .step-panel {
+        display: none;
+    }
+
+    .step-panel.active {
+        display: block;
+        animation: panel-in 0.3s ease;
+    }
+
+    @keyframes panel-in {
+        from {
+            opacity: 0;
+            transform: translateX(16px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .step-header {
+        margin-bottom: 28px;
+    }
+
+    .step-heading {
+        font-family: var(--font-display);
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--white);
+        margin-bottom: 6px;
+    }
+
+    .step-sub {
+        color: var(--muted);
+        font-size: 0.9rem;
+    }
+
+    /* Dynamic list items */
+    .dynamic-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .dynamic-item {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 20px;
+        position: relative;
+        transition: border-color 0.2s;
+    }
+
+    .dynamic-item:hover {
+        border-color: rgba(0, 208, 132, 0.2);
+    }
+
+    .item-remove {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        transition: all 0.2s;
+    }
+
+    .item-remove:hover {
+        background: rgba(239, 68, 68, 0.25);
+    }
+
+    /* Template selector */
+    .templates-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .template-card {
+        border: 2px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 20px;
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.2s;
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .template-card:hover {
+        border-color: rgba(0, 208, 132, 0.3);
+        background: rgba(0, 208, 132, 0.05);
+        transform: translateY(-2px);
+    }
+
+    .template-card.selected {
+        border-color: var(--green);
+        background: rgba(0, 208, 132, 0.08);
+        box-shadow: 0 0 20px var(--green-glow);
+    }
+
+    .template-preview-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(8px);
+    }
+
+    .template-preview-modal.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .preview-content {
+        width: 90%;
+        max-width: 900px;
+        max-height: 90vh;
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .preview-header {
+        background: #070b14;
+        padding: 16px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .preview-title {
+        font-family: var(--font-display);
+        font-weight: 700;
+        color: white;
+    }
+
+    .preview-close {
+        background: none;
+        border: none;
+        color: var(--muted);
+        font-size: 1.5rem;
+        cursor: pointer;
+    }
+
+    .preview-body {
+        flex: 1;
+        overflow: auto;
+        padding: 20px;
+    }
+
+    .preview-iframe {
+        width: 100%;
+        height: 500px;
+        border: none;
+        background: white;
+    }
+
+    .view-demo-btn {
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        padding: 4px 10px;
+        font-size: 0.7rem;
+        background: rgba(0, 208, 132, 0.2);
+        border: 1px solid rgba(0, 208, 132, 0.4);
+        color: var(--green);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .view-demo-btn:hover {
+        background: var(--green);
+        color: var(--bg);
+    }
+
+    .template-icon {
+        font-size: 2rem;
+        margin-bottom: 10px;
+    }
+
+    .template-name {
+        font-weight: 700;
+        font-size: 0.875rem;
+        color: var(--white);
+        margin-bottom: 4px;
+    }
+
+    .template-desc {
+        font-size: 0.75rem;
+        color: var(--muted);
+    }
+
+    /* Skill tags */
+    .skills-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .skill-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: 20px;
+        background: rgba(0, 208, 132, 0.1);
+        border: 1px solid rgba(0, 208, 132, 0.25);
+        color: var(--green);
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    .skill-tag button {
+        background: none;
+        border: none;
+        color: inherit;
+        cursor: pointer;
+        font-size: 0.9rem;
+        padding: 0;
+        line-height: 1;
+        opacity: 0.7;
+    }
+
+    .skill-tag button:hover {
+        opacity: 1;
+    }
+
+    .skill-input-row {
+        display: flex;
+        gap: 8px;
+    }
+
+    /* Navigation */
+    .step-nav {
+        display: flex;
+        gap: 12px;
+        margin-top: 32px;
+        padding-top: 24px;
+        border-top: 1px solid var(--border);
+    }
+
+    /* Star rating for skill level */
+    .skill-level {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+        margin-top: 8px;
+    }
+
+    .star {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        color: rgba(255, 255, 255, 0.2);
+        font-size: 1rem;
+        transition: color 0.15s;
+    }
+
+    .star.active {
+        color: var(--green);
+    }
+
+    @media (max-width: 768px) {
+        .builder-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .builder-sidebar {
+            display: none;
+        }
+
+        .templates-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="builder-layout">
+
+    <!-- Sidebar -->
+    <aside class="builder-sidebar">
+        <div class="sidebar-title">Build Your CV</div>
+
+        <div class="sidebar-step active" id="nav-step-1" onclick="gotoStep(1)">
+            <div class="step-num">1</div><span>👤 Personal Info</span>
+        </div>
+        <div class="sidebar-step" id="nav-step-2" onclick="gotoStep(2)">
+            <div class="step-num">2</div><span>🎨 Templates</span>
+        </div>
+        <div class="sidebar-step" id="nav-step-3" onclick="gotoStep(3)">
+            <div class="step-num">3</div><span>📝 Summary</span>
+        </div>
+        <div class="sidebar-step" id="nav-step-4" onclick="gotoStep(4)">
+            <div class="step-num">4</div><span>💼 Experience</span>
+        </div>
+        <div class="sidebar-step" id="nav-step-5" onclick="gotoStep(5)">
+            <div class="step-num">5</div><span>🎓 Education</span>
+        </div>
+        <div class="sidebar-step" id="nav-step-6" onclick="gotoStep(6)">
+            <div class="step-num">6</div><span>⚡ Skills</span>
+        </div>
+        <div class="sidebar-step" id="nav-step-7" onclick="gotoStep(7)">
+            <div class="step-num">7</div><span>🚀 Projects</span>
+        </div>
+        <div class="sidebar-step" id="nav-step-8" onclick="gotoStep(8)">
+            <div class="step-num">8</div><span>🏆 Achievements</span>
+        </div>
+        <div class="sidebar-step" id="nav-step-9" onclick="gotoStep(9)">
+            <div class="step-num">9</div><span>📜 Certifications</span>
+        </div>
+        <div class="sidebar-step" id="nav-step-10" onclick="gotoStep(10)">
+            <div class="step-num">10</div><span>🌐 Languages</span>
+        </div>
+
+        <div class="sidebar-progress">
+            <div class="progress-label">
+                <span>Completion</span>
+                <span id="progressPct">10%</span>
+            </div>
+            <div class="progress">
+                <div class="progress-bar" id="progressBar" style="width:10%"></div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="builder-main">
+
+        <!-- Step 1: Personal Info -->
+        <div class="step-panel active" id="step-1">
+            <div class="step-header">
+                <div class="step-heading">👤 Personal Info</div>
+                <div class="step-sub">Your contact details and identity</div>
+            </div>
+            <div class="card card-glow">
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Full Name *</label>
+                        <input type="text" class="form-control" id="full_name" placeholder="Rachit Sharma"
+                            value="{{ cv.full_name|default:'Rachit' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email *</label>
+                        <input type="email" class="form-control" id="email" placeholder="rachit@email.com"
+                            value="{{ cv.email|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Phone</label>
+                        <input type="tel" class="form-control" id="phone" placeholder="+91 9876543210"
+                            value="{{ cv.phone|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Location</label>
+                        <input type="text" class="form-control" id="location" placeholder="New Delhi, India"
+                            value="{{ cv.location|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">LinkedIn URL</label>
+                        <input type="url" class="form-control" id="linkedin"
+                            placeholder="https://linkedin.com/in/rachit" value="{{ cv.linkedin|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">GitHub URL</label>
+                        <input type="url" class="form-control" id="github" placeholder="https://github.com/rachit"
+                            value="{{ cv.github|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Portfolio / Website</label>
+                        <input type="url" class="form-control" id="website" placeholder="https://rachit.dev"
+                            value="{{ cv.website|default:'' }}">
+                    </div>
+                </div>
+            </div>
+            <div class="step-nav">
+                <button class="btn btn-primary" onclick="gotoStep(2)">Next: Choose Template →</button>
+            </div>
+        </div>
+
+        <!-- Step 2: Templates -->
+        <div class="step-panel" id="step-2">
+            <div class="step-header">
+                <div class="step-heading">🎨 Choose Template</div>
+                <div class="step-sub">Pick the perfect design for your CV</div>
+            </div>
+            <div class="templates-grid" id="templateGrid">
+                {% for t in templates %}
+                <div class="template-card {% if cv.template == t.id or not cv and t.id == 'modern' %}selected{% endif %}"
+                    data-id="{{ t.id }}" onclick="selectTemplate('{{ t.id }}')">
+                    <div class="template-icon">{{ t.icon }}</div>
+                    <div class="template-name">{{ t.name }}</div>
+                    <div class="template-desc">{{ t.desc }}</div>
+                    <button class="view-demo-btn" onclick="viewTemplateDemo('{{ t.id }}', event)">👁 Preview</button>
+                </div>
+                {% endfor %}
+            </div>
+            <input type="hidden" id="selected_template" value="{{ cv.template|default:'modern' }}">
+            <div class="step-nav">
+                <button class="btn btn-ghost" onclick="gotoStep(1)">← Back</button>
+                <button class="btn btn-primary" onclick="gotoStep(3)">Next: Summary →</button>
+            </div>
+        </div>
+
+        <!-- Step 3: Summary -->
+        <div class="step-panel" id="step-3">
+            <div class="step-header">
+                <div class="step-heading">📝 Professional Summary</div>
+                <div class="step-sub">A compelling overview of who you are professionally</div>
+            </div>
+            <div class="card card-glow">
+                <div class="form-group">
+                    <label class="form-label">Professional Summary</label>
+                    <textarea class="form-control" id="professional_summary" rows="6"
+                        placeholder="Dynamic and results-driven software engineer with 3+ years of experience...">{{ cv.professional_summary|default:'' }}</textarea>
+                </div>
+                <button type="button" class="btn btn-purple" onclick="generateSummary()">⚡ AI Generate Summary</button>
+            </div>
+            <div class="step-nav">
+                <button class="btn btn-ghost" onclick="gotoStep(2)">← Back</button>
+                <button class="btn btn-primary" onclick="gotoStep(4)">Next: Experience →</button>
+            </div>
+        </div>
+
+        <!-- Template Preview Modal -->
+        <div class="template-preview-modal" id="templatePreviewModal" onclick="closeTemplateDemo(event)">
+            <div class="preview-content" onclick="event.stopPropagation()">
+                <div class="preview-header">
+                    <div class="preview-title" id="previewModalTitle">Template Preview</div>
+                    <button class="preview-close" onclick="closeTemplateDemo()">&times;</button>
+                </div>
+                <div class="preview-body">
+                    <iframe class="preview-iframe" id="previewIframe" src="/print/demo/"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: Experience -->
+        <div class="step-panel" id="step-4">
+            <div class="step-header">
+                <div class="step-heading">💼 Work Experience</div>
+                <div class="step-sub">Your professional history</div>
+            </div>
+            <div class="dynamic-list" id="experienceList"></div>
+            <button class="btn btn-outline" style="margin-top:16px" onclick="addExperience()">+ Add Experience</button>
+            <div class="step-nav">
+                <button class="btn btn-ghost" onclick="gotoStep(3)">← Back</button>
+                <button class="btn btn-primary" onclick="gotoStep(5)">Next: Education →</button>
+            </div>
+        </div>
+
+        <!-- Step 5: Education -->
+        <div class="step-panel" id="step-5">
+            <div class="step-header">
+                <div class="step-heading">🎓 Education</div>
+                <div class="step-sub">Your academic background</div>
+            </div>
+            <div class="dynamic-list" id="educationList"></div>
+            <button class="btn btn-outline" style="margin-top:16px" onclick="addEducation()">+ Add Education</button>
+            <div class="step-nav">
+                <button class="btn btn-ghost" onclick="gotoStep(4)">← Back</button>
+                <button class="btn btn-primary" onclick="gotoStep(6)">Next: Skills →</button>
+            </div>
+        </div>
+
+        <!-- Step 6: Skills -->
+        <div class="step-panel" id="step-6">
+            <div class="step-header">
+                <div class="step-heading">⚡ Skills</div>
+                <div class="step-sub">Technical and soft skills</div>
+            </div>
+            <div class="card card-glow">
+                <div class="skills-container" id="skillsContainer"></div>
+                <div class="skill-input-row">
+                    <input type="text" class="form-control" id="skillInput" placeholder="e.g. Python, React..." onkeydown="if(event.key==='Enter')addSkill()">
+                    <button class="btn btn-primary" onclick="addSkill()">Add</button>
+                </div>
+                <div style="margin-top:16px">
+                    <div class="form-label" style="margin-bottom:8px">Quick Add Skills</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:6px">
+                        {% for skill in quick_skills %}
+                        <span style="cursor:pointer;padding:4px 10px;border-radius:20px;font-size:0.75rem;background:rgba(0,208,132,0.1);border:1px solid rgba(0,208,132,0.25);color:var(--green);transition:all 0.2s"
+                            onmouseover="this.style.background='var(--green)';this.style.color='var(--bg)'"
+                            onmouseout="this.style.background='rgba(0,208,132,0.1)';this.style.color='var(--green)'"
+                            onclick="addQuickSkill('{{ skill }}')">{{ skill }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="step-nav">
+                <button class="btn btn-ghost" onclick="gotoStep(5)">← Back</button>
+                <button class="btn btn-primary" onclick="gotoStep(7)">Next: Projects →</button>
+            </div>
+        </div>
+
+        <!-- Step 7: Projects -->
+        <div class="step-panel" id="step-7">
+            <div class="step-header">
+                <div class="step-heading">🚀 Projects</div>
+                <div class="step-sub">Your side projects</div>
+            </div>
+            <div class="dynamic-list" id="projectsList"></div>
+            <button class="btn btn-outline" style="margin-top:16px" onclick="addProject()">+ Add Project</button>
+            <div class="step-nav">
+                <button class="btn btn-ghost" onclick="gotoStep(6)">← Back</button>
+                <button class="btn btn-primary" onclick="gotoStep(8)">Next: Achievements →</button>
+            </div>
+        </div>
+
+        <!-- Step 8: Achievements -->
+        <div class="step-panel" id="step-8">
+            <div class="step-header">
+                <div class="step-heading">🏆 Achievements</div>
+                <div class="step-sub">Awards and recognition</div>
+            </div>
+            <div class="dynamic-list" id="achievementsList"></div>
+            <button class="btn btn-outline" style="margin-top:16px" onclick="addAchievement()">+ Add Achievement</button>
+            <div class="step-nav">
+                <button class="btn btn-ghost" onclick="gotoStep(7)">← Back</button>
+                <button class="btn btn-primary" onclick="gotoStep(9)">Next: Certifications →</button>
+            </div>
+        </div>
+
+        <!-- Step 9: Certifications -->
+        <div class="step-panel" id="step-9">
+            <div class="step-header">
+                <div class="step-heading">📜 Certifications</div>
+                <div class="step-sub">Professional certifications</div>
+            </div>
+            <div class="dynamic-list" id="certificationsList"></div>
+            <button class="btn btn-outline" style="margin-top:16px" onclick="addCertification()">+ Add Certification</button>
+            <div class="step-nav">
+                <button class="btn btn-ghost" onclick="gotoStep(8)">← Back</button>
+                <button class="btn btn-primary" onclick="gotoStep(10)">Next: Languages →</button>
+            </div>
+        </div>
+
+        <!-- Step 10: Languages -->
+        <div class="step-panel" id="step-10">
+            <div class="step-header">
+                <div class="step-heading">🌐 Languages</div>
+                <div class="step-sub">Languages you speak</div>
+            </div>
+            <div class="dynamic-list" id="languagesList"></div>
+            <button class="btn btn-outline" style="margin-top:16px" onclick="addLanguage()">+ Add Language</button>
+            <div class="step-nav">
+                <button class="btn btn-ghost" onclick="gotoStep(9)">← Back</button>
+                <button class="btn btn-primary btn-lg" id="saveBtn" onclick="saveCV()">
+                    <span id="saveBtnText">💾 Save & Preview CV</span>
+                </button>
+            </div>
+        </div>
+
+    </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const CV_ID = {{ cv.pk|default:'null' }};
+    let currentStep = 1;
+    const TOTAL_STEPS = 10;
+
+    // ─── Data stores ──────────────────────────────────────────────
+    let experience = {{ cv.experience_json|default:'[]'| safe }};
+    let education = {{ cv.education_json|default:'[]'| safe }};
+    let skills = {{ cv.skills_json|default:'[]'| safe }};
+    let projects = {{ cv.projects_json|default:'[]'| safe }};
+    let achievements = {{ cv.achievements_json|default:'[]'| safe }};
+    let certifications = {{ cv.certifications_json|default:'[]'| safe }};
+    let languages = {{ cv.languages_json|default:'[]'| safe }};
+
+    // ─── Init ─────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+        renderExperience();
+        renderEducation();
+        renderSkills();
+        renderProjects();
+        renderAchievements();
+        renderCertifications();
+        renderLanguages();
+        updateProgress();
+    });
+
+    // ─── Navigation ───────────────────────────────────────────────
+    function gotoStep(n) {
+        document.getElementById(`step-${currentStep}`).classList.remove('active');
+        document.getElementById(`nav-step-${currentStep}`).classList.remove('active');
+        if (currentStep < n) document.getElementById(`nav-step-${currentStep}`).classList.add('done');
+
+        currentStep = n;
+        document.getElementById(`step-${n}`).classList.add('active');
+        document.getElementById(`nav-step-${n}`).classList.add('active');
+        document.getElementById(`nav-step-${n}`).classList.remove('done');
+        updateProgress();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function updateProgress() {
+        const pct = Math.round((currentStep / TOTAL_STEPS) * 100);
+        document.getElementById('progressBar').style.width = pct + '%';
+        document.getElementById('progressPct').textContent = pct + '%';
+    }
+
+    // ─── Template selection ───────────────────────────────────────
+    function selectTemplate(id) {
+        document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
+        document.querySelector(`[data-id="${id}"]`).classList.add('selected');
+        document.getElementById('selected_template').value = id;
+    }
+
+    // ─── Template Preview Demo ────────────────────────────────────
+    const DEMO_CV = {
+        full_name: 'Alex Johnson',
+        email: 'alex.johnson@email.com',
+        phone: '+1 555-123-4567',
+        location: 'San Francisco, CA',
+        linkedin: 'linkedin.com/in/alexjohnson',
+        github: 'github.com/alexjohnson',
+        professional_summary: 'Full-stack developer with 5+ years of experience building scalable web applications. Passionate about clean code, performance optimization, and user experience.',
+        template: 'modern'
+    };
+
+    const TEMPLATE_NAMES = {
+        modern: 'Modern Minimal',
+        atspro: 'ATS Pro',
+        clean: 'Clean Simple',
+        executive: 'Executive Pro',
+        creative: 'Creative Vivid',
+        tech: 'Tech Developer',
+        elegant: 'Elegant Classic',
+        bold: 'Bold Impact'
+    };
+
+    function viewTemplateDemo(templateId, event) {
+        if (event) event.stopPropagation();
+        document.getElementById('previewModalTitle').textContent = TEMPLATE_NAMES[templateId];
+        document.getElementById('previewIframe').src = `/print/demo/?template=${templateId}`;
+        document.getElementById('templatePreviewModal').classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeTemplateDemo(event) {
+        if (event && event.target !== event.currentTarget) return;
+        document.getElementById('templatePreviewModal').classList.remove('show');
+        document.body.style.overflow = '';
+    }
+
+    // ─── Experience ───────────────────────────────────────────────
+    function addExperience() {
+        experience.push({ title: '', company: '', location: '', start: '', end: '', current: false, description: '' });
+        renderExperience();
+    }
+
+    function renderExperience() {
+        const list = document.getElementById('experienceList');
+        list.innerHTML = experience.map((e, i) => `
+    <div class="dynamic-item">
+      <button class="item-remove" onclick="removeItem('experience',${i})">✕</button>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Job Title</label>
+          <input type="text" class="form-control" value="${e.title || ''}" placeholder="Software Engineer"
+            oninput="experience[${i}].title=this.value">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Company</label>
+          <input type="text" class="form-control" value="${e.company || ''}" placeholder="Google"
+            oninput="experience[${i}].company=this.value">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Location</label>
+          <input type="text" class="form-control" value="${e.location || ''}" placeholder="Bangalore, India"
+            oninput="experience[${i}].location=this.value">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Start Date</label>
+          <input type="month" class="form-control" value="${e.start || ''}"
+            oninput="experience[${i}].start=this.value">
+        </div>
+        <div class="form-group">
+          <label class="form-label">End Date</label>
+          <input type="month" class="form-control" value="${e.end || ''}" ${e.current ? 'disabled' : ''}
+            oninput="experience[${i}].end=this.value" id="exp-end-${i}">
+        </div>
+        <div class="form-group" style="display:flex;align-items:center;gap:8px;padding-top:24px">
+          <input type="checkbox" id="curr-${i}" ${e.current ? 'checked' : ''}
+            onchange="toggleCurrent(${i},this.checked)" style="accent-color:var(--green)">
+          <label for="curr-${i}" style="font-size:0.875rem;color:var(--muted);cursor:pointer">Currently working here</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description & Achievements</label>
+        <textarea class="form-control" rows="4" placeholder="• Led development of... &#10;• Increased performance by 40%..."
+          oninput="experience[${i}].description=this.value">${e.description || ''}</textarea>
+      </div>
+    </div>
+  `).join('') || '<p style="color:var(--muted);text-align:center;padding:20px">No experience added yet. Click below to add.</p>';
+    }
+
+    function toggleCurrent(i, checked) {
+        experience[i].current = checked;
+        const endField = document.getElementById(`exp-end-${i}`);
+        if (endField) { endField.disabled = checked; if (checked) experience[i].end = 'Present'; }
+    }
+
+    // ─── Education ────────────────────────────────────────────────
+    function addEducation() {
+        education.push({ degree: '', field: '', institution: '', location: '', start: '', end: '', grade: '' });
+        renderEducation();
+    }
+
+    function renderEducation() {
+        const list = document.getElementById('educationList');
+        list.innerHTML = education.map((e, i) => `
+    <div class="dynamic-item">
+      <button class="item-remove" onclick="removeItem('education',${i})">✕</button>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Degree</label>
+          <input type="text" class="form-control" value="${e.degree || ''}" placeholder="B.Tech / M.Tech / MBA"
+            oninput="education[${i}].degree=this.value">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Field of Study</label>
+          <input type="text" class="form-control" value="${e.field || ''}" placeholder="Computer Science"
+            oninput="education[${i}].field=this.value">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Institution</label>
+          <input type="text" class="form-control" value="${e.institution || ''}" placeholder="IIT Delhi"
+            oninput="education[${i}].institution=this.value">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Location</label>
+          <input type="text" class="form-control" value="${e.location || ''}" placeholder="Delhi, India"
+            oninput="education[${i}].location=this.value">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Start Year</label>
+          <input type="number" class="form-control" value="${e.start || ''}" placeholder="2020" min="1990" max="2030"
+            oninput="education[${i}].start=this.value">
+        </div>
+        <div class="form-group">
+          <label class="form-label">End Year</label>
+          <input type="number" class="form-control" value="${e.end || ''}" placeholder="2024" min="1990" max="2030"
+            oninput="education[${i}].end=this.value">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Grade / CGPA</label>
+          <input type="text" class="form-control" value="${e.grade || ''}" placeholder="9.2 CGPA / First Class"
+            oninput="education[${i}].grade=this.value">
+        </div>
+      </div>
+    </div>
+  `).join('') || '<p style="color:var(--muted);text-align:center;padding:20px">No education added yet.</p>';
+    }
+
+    // ─── Skills ───────────────────────────────────────────────────
+    function addSkill() {
+        const input = document.getElementById('skillInput');
+        const val = input.value.trim();
+        if (!val) return;
+        val.split(',').forEach(s => {
+            const name = s.trim();
+            if (name && !skills.find(sk => (sk.name || sk).toLowerCase() === name.toLowerCase())) {
+                skills.push({ name, level: 3 });
+            }
+        });
+        input.value = '';
+        renderSkills();
+    }
+
+    function addQuickSkill(name) {
+        if (!skills.find(s => (s.name || s).toLowerCase() === name.toLowerCase())) {
+            skills.push({ name, level: 3 });
+            renderSkills();
+        }
+    }
+
+    function removeSkill(i) { skills.splice(i, 1); renderSkills(); }
+
+    function renderSkills() {
+        const c = document.getElementById('skillsContainer');
+        c.innerHTML = skills.map((s, i) => {
+            const name = s.name || s;
+            return `<div class="skill-tag">${name}<button onclick="removeSkill(${i})">✕</button></div>`;
+        }).join('');
+    }
+
+    // ─── Projects ─────────────────────────────────────────────────
+    function addProject() {
+        projects.push({ name: '', description: '', technologies: '', link: '', github: '' });
+        renderProjects();
+    }
+
+    function renderProjects() {
+        const list = document.getElementById('projectsList');
+        list.innerHTML = projects.map((p, i) => `
+    <div class="dynamic-item">
+      <button class="item-remove" onclick="removeItem('projects',${i})">✕</button>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Project Name</label>
+          <input type="text" class="form-control" value="${p.name || ''}" placeholder="AI Chatbot"
+            oninput="projects[${i}].name=this.value">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Technologies</label>
+          <input type="text" class="form-control" value="${p.technologies || ''}" placeholder="Python, React, OpenAI"
+            oninput="projects[${i}].technologies=this.value">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Live URL</label>
+          <input type="url" class="form-control" value="${p.link || ''}" placeholder="https://..."
+            oninput="projects[${i}].link=this.value">
+        </div>
+        <div class="form-group">
+          <label class="form-label">GitHub URL</label>
+          <input type="url" class="form-control" value="${p.github || ''}" placeholder="https://github.com/..."
+            oninput="projects[${i}].github=this.value">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-control" rows="3" placeholder="Built a full-stack chatbot that..."
+          oninput="projects[${i}].description=this.value">${p.description || ''}</textarea>
+      </div>
+    </div>
+  `).join('') || '<p style="color:var(--muted);text-align:center;padding:20px">No projects added yet.</p>';
+    }
+
+    // ─── Achievements ─────────────────────────────────────────────
+    function addAchievement() {
+        achievements.push({ title: '', description: '', date: '' });
+        renderAchievements();
+    }
+
+    function renderAchievements() {
+        const list = document.getElementById('achievementsList');
+        list.innerHTML = achievements.map((a, i) => `
+    <div class="dynamic-item">
+      <button class="item-remove" onclick="removeItem('achievements',${i})">✕</button>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Title</label>
+          <input type="text" class="form-control" value="${a.title || ''}" placeholder="Best Employee Award"
+            oninput="achievements[${i}].title=this.value">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date</label>
+          <input type="month" class="form-control" value="${a.date || ''}"
+            oninput="achievements[${i}].date=this.value">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-control" rows="2" placeholder="Recognized for..."
+          oninput="achievements[${i}].description=this.value">${a.description || ''}</textarea>
+      </div>
+    </div>
+  `).join('') || '<p style="color:var(--muted);text-align:center;padding:20px">No achievements added yet.</p>';
+    }
+
+    // ─── Certifications ───────────────────────────────────────────
+    function addCertification() {
+        certifications.push({ name: '', issuer: '', date: '', url: '' });
+        renderCertifications();
+    }
+
+    function renderCertifications() {
+        const list = document.getElementById('certificationsList');
+        list.innerHTML = certifications.map((c, i) => `
+    <div class="dynamic-item">
+      <button class="item-remove" onclick="removeItem('certifications',${i})">✕</button>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Certification Name</label>
+          <input type="text" class="form-control" value="${c.name || ''}" placeholder="AWS Solutions Architect"
+            oninput="certifications[${i}].name=this.value">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Issuer</label>
+          <input type="text" class="form-control" value="${c.issuer || ''}" placeholder="Amazon Web Services"
+            oninput="certifications[${i}].issuer=this.value">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Issue Date</label>
+          <input type="month" class="form-control" value="${c.date || ''}"
+            oninput="certifications[${i}].date=this.value">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Credential URL</label>
+          <input type="url" class="form-control" value="${c.url || ''}" placeholder="https://..."
+            oninput="certifications[${i}].url=this.value">
+        </div>
+      </div>
+    </div>
+  `).join('') || '<p style="color:var(--muted);text-align:center;padding:20px">No certifications added yet.</p>';
+    }
+
+    // ─── Languages ────────────────────────────────────────────────
+    function addLanguage() {
+        languages.push({ name: '', proficiency: 'Professional' });
+        renderLanguages();
+    }
+
+    function renderLanguages() {
+        const list = document.getElementById('languagesList');
+        const levels = ['Native', 'Fluent', 'Professional', 'Intermediate', 'Basic'];
+        list.innerHTML = languages.map((l, i) => `
+    <div class="dynamic-item">
+      <button class="item-remove" onclick="removeItem('languages',${i})">✕</button>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Language</label>
+          <input type="text" class="form-control" value="${l.name || ''}" placeholder="Hindi / English"
+            oninput="languages[${i}].name=this.value">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Proficiency</label>
+          <select class="form-control" onchange="languages[${i}].proficiency=this.value">
+            ${levels.map(lv => `<option ${l.proficiency === lv ? 'selected' : ''}>${lv}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+    </div>
+  `).join('') || '<p style="color:var(--muted);text-align:center;padding:20px">No languages added yet.</p>';
+    }
+
+    // ─── Generic remove ───────────────────────────────────────────
+    function removeItem(type, i) {
+        const map = { experience, education, projects, achievements, certifications, languages };
+        map[type].splice(i, 1);
+        const renderMap = {
+            experience: renderExperience, education: renderEducation,
+            projects: renderProjects, achievements: renderAchievements,
+            certifications: renderCertifications, languages: renderLanguages
+        };
+        renderMap[type]();
+    }
+
+    // ─── AI Summary ───────────────────────────────────────────────
+    async function generateSummary() {
+        const name = document.getElementById('full_name').value || 'Rachit';
+        const skillNames = skills.map(s => s.name || s).slice(0, 8).join(', ');
+        const latestJob = experience[0] ? `${experience[0].title} at ${experience[0].company}` : '';
+
+        const summaries = [
+            `Results-driven professional with expertise in ${skillNames || 'technology and innovation'}. ${latestJob ? `Currently ${latestJob},` : ''} passionate about building scalable solutions and driving meaningful impact. Proven track record of delivering high-quality work while collaborating effectively across teams.`,
+            `Dynamic and motivated ${latestJob || 'professional'} with strong skills in ${skillNames || 'software development'}. Committed to continuous learning and delivering exceptional results. Adept at problem-solving, cross-functional collaboration, and turning complex challenges into elegant solutions.`,
+            `Innovative and detail-oriented professional specializing in ${skillNames || 'technology'}. ${experience.length > 1 ? `With ${experience.length}+ professional experiences,` : ''} I bring a blend of technical expertise and creative thinking to every project. Passionate about building products that make a real difference.`
+        ];
+
+        document.getElementById('professional_summary').value = summaries[Math.floor(Math.random() * summaries.length)];
+        showToast('Summary generated!', 'success');
+    }
+
+    // ─── Save ─────────────────────────────────────────────────────
+    async function saveCV() {
+    const name = document.getElementById('full_name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    if (!name || !email) {
+        showToast('Please fill in your name and email', 'error');
+        gotoStep(1); return;
+    }
+
+    const btn = document.getElementById('saveBtn');
+    const btnText = document.getElementById('saveBtnText');
+    if (btnText) btnText.textContent = 'Saving...';
+    btn.disabled = true;
+
+    const payload = {
+        full_name: name,
+        email: email,
+        template: document.getElementById('selected_template').value,
+        phone: document.getElementById('phone').value,
+        location: document.getElementById('location').value,
+        linkedin: document.getElementById('linkedin').value,
+        github: document.getElementById('github').value,
+        website: document.getElementById('website').value,
+        professional_summary: document.getElementById('professional_summary').value,
+        experience: experience,
+        education: education,
+        skills: skills,
+        projects: projects,
+        achievements: achievements,
+        certifications: certifications,
+        languages: languages
+    };
+
+    console.log('Payload:', JSON.stringify(payload).substring(0, 200));
+    console.log('Saving to:', CV_ID ? '/save/' + CV_ID + '/' : '/save/');
+
+    const url = CV_ID ? '/save/' + CV_ID + '/' : '/save/';
+    
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        console.log('Response status:', response.status);
+        const data = await response.json();
+        console.log('Response data:', data);
+        
+        if (data.error) {
+            showToast('Error: ' + data.error, 'error');
+            if (btnText) btnText.textContent = '💾 Save & Preview CV';
+            btn.disabled = false;
+        } else if (data.redirect) {
+            showToast('CV saved! Redirecting...', 'success');
+            setTimeout(() => window.location.href = data.redirect, 500);
+        }
+    } catch(e) {
+        console.error('Save error:', e);
+        showToast('Error: ' + e.message, 'error');
+        if (btnText) btnText.textContent = '💾 Save & Preview CV';
+        btn.disabled = false;
+    }
+}
+
+    function getCookie(name) {
+        const v = document.cookie.split(';').find(c => c.trim().startsWith(name + '='));
+        return v ? v.split('=')[1] : '';
+    }
+</script>
+{% endblock %}
