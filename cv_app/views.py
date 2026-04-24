@@ -80,6 +80,7 @@ def auth_view(request):
     return render(request, 'cv_app/auth.html')
 
 
+@csrf_exempt
 def signup(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -105,6 +106,7 @@ def signup(request):
     return JsonResponse({'error': 'Invalid method'}, status=400)
 
 
+@csrf_exempt
 def signin(request):
     if request.method == 'POST':
         data = json.loads(request.body)
