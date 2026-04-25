@@ -4,19 +4,12 @@ from django.core.wsgi import get_wsgi_application
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cvbuilder.settings')
 
-# Run migrations and create superuser on startup (for Render deployment)
+# For Render deployment - try migrations silently
 if 'gunicorn' in sys.argv:
     try:
         from django.core.management import execute_from_command_line
-        execute_from_command_line(['manage.py', 'migrate', '--noinput'])
-        
-        # Create superuser if not exists
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        if not User.objects.filter(username='admin').exists():
-            User.objects.create_superuser('admin', 'admin@example.com', 'admin123')
-            print("Superuser created: admin / admin123")
-    except Exception as e:
-        print(f"Startup error (non-critical): {e}")
+        execute_from_command_line(['manage.py', 'migrate', '--run-syncdb', '--noinput'])
+    except:
+        pass  # Ignore errors - DB might already be set up
 
 application = get_wsgi_application()
