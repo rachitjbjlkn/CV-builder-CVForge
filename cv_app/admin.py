@@ -48,20 +48,16 @@ class CVProfileAdmin(admin.ModelAdmin):
 admin.site.register(CVProfile, CVProfileAdmin)
 
 class ATSScoreAdmin(admin.ModelAdmin):
-    list_display = ['cv', 'overall_score', 'keyword_score', 'formatting_score', 'created_at']
+    list_display = ['cv_profile', 'overall_score', 'keyword_score', 'format_score', 'created_at']
     list_filter = ['created_at', 'overall_score']
-    search_fields = ['cv__full_name', 'cv__email']
+    search_fields = ['cv_profile__full_name', 'cv_profile__email']
     readonly_fields = ['created_at']
     ordering = ['-created_at']
     date_hierarchy = 'created_at'
     
-    def get_keyword_score(self, obj):
-        return f"{obj.keyword_score}%"
-    get_keyword_score.short_description = 'Keyword Score'
-    
-    def get_formatting_score(self, obj):
-        return f"{obj.formatting_score}%"
-    get_formatting_score.short_description = 'Format Score'
+    def cv_profile(self, obj):
+        return obj.cv_profile.full_name if obj.cv_profile else '-'
+    cv_profile.short_description = 'CV'
 
 admin.site.register(ATSScore, ATSScoreAdmin)
 
