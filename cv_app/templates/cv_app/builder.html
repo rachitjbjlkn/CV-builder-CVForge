@@ -724,7 +724,7 @@
 
     // ─── Data stores ──────────────────────────────────────────────
     let experience = {{ cv.experience_json|default:'[]'| safe }};
-    let education = {{ cv.education_json|default:'[]'| safe }};
+    let education = {{ cv.education_json|default:'[]'| safe }}.map(e => ({...e, type: e.type || 'university'}));
     let skills = {{ cv.skills_json|default:'[]'| safe }};
     let projects = {{ cv.projects_json|default:'[]'| safe }};
     let achievements = {{ cv.achievements_json|default:'[]'| safe }};
@@ -867,7 +867,7 @@
 
     // ─── Education ────────────────────────────────────────────────
     function addEducation() {
-        education.push({ degree: '', field: '', institution: '', location: '', start: '', end: '', grade: '' });
+        education.push({ type: 'university', degree: '', field: '', institution: '', location: '', start: '', end: '', grade: '' });
         renderEducation();
     }
 
@@ -878,18 +878,28 @@
       <button class="item-remove" onclick="removeItem('education',${i})">✕</button>
       <div class="grid-2">
         <div class="form-group">
+          <label class="form-label">Education Type</label>
+          <select class="form-control" onchange="education[${i}].type=this.value">
+            <option value="university" ${e.type === 'university' ? 'selected' : ''}>University/College</option>
+            <option value="school" ${e.type === 'school' ? 'selected' : ''}>School</option>
+            <option value="diploma" ${e.type === 'diploma' ? 'selected' : ''}>Diploma</option>
+            <option value="phd" ${e.type === 'phd' ? 'selected' : ''}>PhD</option>
+            <option value="certification" ${e.type === 'certification' ? 'selected' : ''}>Certification</option>
+          </select>
+        </div>
+        <div class="form-group">
           <label class="form-label">Degree</label>
-          <input type="text" class="form-control" value="${e.degree || ''}" placeholder="B.Tech / M.Tech / MBA"
+          <input type="text" class="form-control" value="${e.degree || ''}" placeholder="${e.type === 'school' ? '10th / 12th / SSC / HSC' : 'B.Tech / M.Tech / MBA / BSc'}"
             oninput="education[${i}].degree=this.value">
         </div>
         <div class="form-group">
           <label class="form-label">Field of Study</label>
-          <input type="text" class="form-control" value="${e.field || ''}" placeholder="Computer Science"
+          <input type="text" class="form-control" value="${e.field || ''}" placeholder="${e.type === 'school' ? 'Science / Commerce / Arts' : 'Computer Science'}"
             oninput="education[${i}].field=this.value">
         </div>
         <div class="form-group">
           <label class="form-label">Institution</label>
-          <input type="text" class="form-control" value="${e.institution || ''}" placeholder="IIT Delhi"
+          <input type="text" class="form-control" value="${e.institution || ''}" placeholder="${e.type === 'school' ? 'KV / DAV / Private School' : 'IIT Delhi / University Name'}"
             oninput="education[${i}].institution=this.value">
         </div>
         <div class="form-group">
@@ -909,7 +919,7 @@
         </div>
         <div class="form-group">
           <label class="form-label">Grade / CGPA</label>
-          <input type="text" class="form-control" value="${e.grade || ''}" placeholder="9.2 CGPA / First Class"
+          <input type="text" class="form-control" value="${e.grade || ''}" placeholder="9.2 CGPA / 95% / First Class"
             oninput="education[${i}].grade=this.value">
         </div>
       </div>

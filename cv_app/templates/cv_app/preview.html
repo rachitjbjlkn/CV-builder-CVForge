@@ -429,27 +429,32 @@
     <div class="cv-body">
       <div class="cv-left">
         {% if cv.skills %}
-        <div class="sec-title">Skills</div>
+        <div class="sec-title">Technical Skills</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px">
         {% for skill in cv.skills %}
-        <span class="skill-pill">{{ skill.name|default:skill }}</span>
+        <span class="skill-pill">{% if skill.name %}{{ skill.name }}{% else %}{{ skill }}{% endif %}</span>
         {% endfor %}
+        </div>
         {% endif %}
         {% if cv.education %}
         <div class="sec-title">Education</div>
         {% for edu in cv.education %}
-        <div style="margin-bottom:14px">
-          <div style="font-weight:700;font-size:0.875rem">{{ edu.degree }} {{ edu.field }}</div>
+        <div style="margin-bottom:16px">
+          {% if edu.type == 'school' %}<span style="background:#00a86b;color:#fff;padding:2px 6px;border-radius:4px;font-size:0.65rem;font-weight:600">SCHOOL</span>{% endif %}
+          {% if edu.type == 'diploma' %}<span style="background:#7c3aed;color:#fff;padding:2px 6px;border-radius:4px;font-size:0.65rem;font-weight:600">DIPLOMA</span>{% endif %}
+          {% if edu.type == 'phd' %}<span style="background:#f59e0b;color:#fff;padding:2px 6px;border-radius:4px;font-size:0.65rem;font-weight:600">PhD</span>{% endif %}
+          {% if edu.type == 'certification' %}<span style="background:#6366f1;color:#fff;padding:2px 6px;border-radius:4px;font-size:0.65rem;font-weight:600">CERT</span>{% endif %}
+          <div style="font-weight:700;font-size:0.875rem;margin-top:4px">{{ edu.degree }}{% if edu.field %} in {{ edu.field }}{% endif %}</div>
           <div style="color:#7c3aed;font-size:0.8rem">{{ edu.institution }}</div>
-          <div style="color:#64748b;font-size:0.75rem">{{ edu.start }} – {{ edu.end }}</div>
-          {% if edu.grade %}<div style="font-size:0.75rem;color:#00a86b">{{ edu.grade }}</div>{% endif %}
+          <div style="color:#64748b;font-size:0.75rem">{{ edu.start }} – {% if edu.end %}{{ edu.end }}{% else %}Present{% endif %}{% if edu.grade %} · {{ edu.grade }}{% endif %}</div>
         </div>
         {% endfor %}
         {% endif %}
         {% if cv.certifications %}
         <div class="sec-title">Certifications</div>
         {% for cert in cv.certifications %}
-        <div style="margin-bottom:10px;font-size:0.82rem">
-          <div style="font-weight:600">{{ cert.name }}</div>
+        <div style="margin-bottom:12px;font-size:0.82rem">
+          <div style="font-weight:600">✓ {{ cert.name }}</div>
           <div style="color:#64748b">{{ cert.issuer }}</div>
         </div>
         {% endfor %}
@@ -457,7 +462,7 @@
         {% if cv.languages %}
         <div class="sec-title">Languages</div>
         {% for lang in cv.languages %}
-        <div style="font-size:0.82rem;margin-bottom:4px">{{ lang.name }} <span style="color:#64748b">– {{ lang.proficiency }}</span></div>
+        <div style="font-size:0.82rem;margin-bottom:4px">🌐 {{ lang.name }} <span style="color:#64748b">– {{ lang.proficiency }}</span></div>
         {% endfor %}
         {% endif %}
       </div>
@@ -534,19 +539,23 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:24px">
         <div>
           {% if cv.education %}
-          <div class="sec-title">Education</div>
+          <div class="sec-title">Education & Qualifications</div>
           {% for edu in cv.education %}
-          <div style="margin-bottom:14px">
-            <div style="font-weight:700">{{ edu.degree }}, {{ edu.field }}</div>
+          <div style="margin-bottom:16px">
+            {% if edu.type == 'school' %}<span style="background:#00a86b;color:#fff;padding:2px 6px;border-radius:4px;font-size:0.6rem;font-weight:600">SCHOOL</span>{% endif %}
+            {% if edu.type == 'diploma' %}<span style="background:#7c3aed;color:#fff;padding:2px 6px;border-radius:4px;font-size:0.6rem;font-weight:600">DIPLOMA</span>{% endif %}
+            {% if edu.type == 'phd' %}<span style="background:#f59e0b;color:#fff;padding:2px 6px;border-radius:4px;font-size:0.6rem;font-weight:600">PhD</span>{% endif %}
+            {% if edu.type == 'certification' %}<span style="background:#6366f1;color:#fff;padding:2px 6px;border-radius:4px;font-size:0.6rem;font-weight:600">CERT</span>{% endif %}
+            <div style="font-weight:700;margin-top:4px">{{ edu.degree }}{% if edu.field %}, {{ edu.field }}{% endif %}</div>
             <div style="font-style:italic;color:#7c3aed">{{ edu.institution }}</div>
-            <div style="font-size:0.82rem;color:#666;font-family:'Space Grotesk'">{{ edu.start }} – {{ edu.end }}{% if edu.grade %} · {{ edu.grade }}{% endif %}</div>
+            <div style="font-size:0.82rem;color:#666;font-family:'Space Grotesk'">{{ edu.start }} – {% if edu.end %}{{ edu.end }}{% else %}Present{% endif %}{% if edu.grade %} · {{ edu.grade }}{% endif %}</div>
           </div>
           {% endfor %}
           {% endif %}
         </div>
         <div>
           {% if cv.skills %}
-          <div class="sec-title">Core Competencies</div>
+          <div class="sec-title">Technical Competencies</div>
           <div class="skill-row">
             {% for skill in cv.skills %}<span class="skill-item">{{ skill.name|default:skill }}</span>{% endfor %}
           </div>
