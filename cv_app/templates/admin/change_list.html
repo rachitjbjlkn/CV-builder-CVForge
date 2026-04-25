@@ -1,0 +1,60 @@
+{% extends "admin/base/base.html" %}
+{% load i18n admin_list admin_modify %}
+
+{% block title %}Manage {{ cl.opts.verbose_name_plural|title }} | CVForge Admin{% endblock %}
+
+{% block body %}
+<div id="header">
+    <a href="{% url 'admin:index' %}" class="brand">
+        <i class="fas fa-file-alt"></i> CVForge Admin
+    </a>
+    <div id="user-tools">
+        Welcome, <strong>{% firstof user.get_short_name user.get_username %}</strong>.
+        <a href="{% url 'admin:password_change' %}">Change password</a>
+        <a href="{% url 'admin:logout' %}">Log out</a>
+    </div>
+</div>
+
+<div id="container">
+    {% if has_permission %}
+        <div id="content-main">
+            {% block content %}
+            <div class="dashboard">
+                <div class="dashboard-header">
+                    <h1>
+                        {% blocktrans with cl.opts.verbose_name_plural as name %}Select {{ name }}{% endblocktrans %}
+                    </h1>
+                </div>
+
+                {% if cl.formset.errors %}
+                    <div class="errornote">
+                        {% blocktrans with cl.formset.errors|length as counter %}Please correct the error below.{% endblocktrans %}
+                    </div>
+                {% endif %}
+
+                <div id="changelist-form">
+                    {% if cl.has_filters %}
+                    <div id="changelist-filter">
+                        <h3>Filter</h3>
+                        {% for spec in cl.filter_specs %}{% admin_list_filter cl spec %}{% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <form id="changelist-form" method="post"{% if cl.has_autofields %}enctype="multipart/form-data"{% endif %}>{% csrf_token %}
+                    {% if actions_on_top %}{% admin_actions %}{% endif %}
+                    
+                    {% result_list cl %}
+                    
+                    {% if actions_on_bottom %}{% admin_actions %}{% endif %}
+                    
+                    {% pagination cl %}
+                    </form>
+                </div>
+            </div>
+            {% endblock %}
+        </div>
+    {% else %}
+        <p>{% trans "You don't have permission to view this page." %}</p>
+    {% endif %}
+</div>
+{% endblock %}

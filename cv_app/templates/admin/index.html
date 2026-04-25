@@ -1,0 +1,47 @@
+{% extends "admin/base/base.html" %}
+{% load i18n %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block body %}
+{% if not is_popup %}
+<div id="header">
+    <a href="{% url 'admin:index' %}" class="brand">
+        <i class="fas fa-file-alt"></i> CVForge Admin
+    </a>
+    <div id="user-tools">
+        {% block welcome-msg %}
+            Welcome, <strong>{% firstof user.get_short_name user.get_username %}</strong>.
+        {% endblock %}
+        {% block userlinks %}
+            {% if user.has_usable_password %}
+            <a href="{% url 'admin:password_change' %}"><i class="fas fa-key"></i> Change password</a>
+            {% endif %}
+            <a href="{% url 'admin:logout' %}"><i class="fas fa-sign-out-alt"></i> Log out</a>
+        {% endblock %}
+    </div>
+</div>
+
+<div id="container">
+    {% if has_permission %}
+    <div id="content-main">
+        {% if has_app_list %}
+        <div class="app-list">
+            {% for app in app_list %}
+                {% include "admin/app_list.html" %}
+            {% empty %}
+                <p>{% trans "No apps to display." %}</p>
+            {% endfor %}
+        </div>
+        {% else %}
+            <p>{% trans "You don't have permission to view or edit anything." %}</p>
+        {% endif %}
+    </div>
+    {% else %}
+    <p>{% trans "You don't have permission to access the admin." %}</p>
+    {% endif %}
+</div>
+{% else %}
+{{ block.super }}
+{% endif %}
+{% endblock %}
